@@ -1,40 +1,44 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Easy Social{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-    <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
-  </head>
-  <body>
-    <header class="topbar">
-      <a class="brand" href="{{ url_for('social.feed') if current_user.is_authenticated else url_for('auth.login') }}">Easy Social</a>
-      <nav>
-        {% if current_user.is_authenticated %}
-          <a href="{{ url_for('social.feed') }}">Feed</a>
-          <a href="{{ url_for('social.explore') }}">Explore</a>
-          <a href="{{ url_for('social.profile', username=current_user.username) }}">@{{ current_user.username }}</a>
-          <form method="post" action="{{ url_for('auth.logout') }}">
-            <button type="submit" class="link-button">Log out</button>
-          </form>
-        {% else %}
-          <a href="{{ url_for('auth.login') }}">Log in</a>
-          <a href="{{ url_for('auth.register') }}">Register</a>
-        {% endif %}
-      </nav>
-    </header>
-    <main class="shell">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="flash-stack">
-            {% for category, message in messages %}
-              <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
-      {% block content %}{% endblock %}
-    </main>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}賴政妘's Easy Social{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('social.feed') if current_user.is_authenticated else url_for('auth.login') }}">
+      賴政妘's Easy Social</a>
+    <nav>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('social.feed') }}">Feed</a>
+      <a href="{{ url_for('social.explore') }}">Explore</a>
+      <a href="{{ url_for('social.profile', username=current_user.username) }}">@{{ current_user.username }}</a>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <button type="submit" class="link-button">Log out</button>
+      </form>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}">Log in</a>
+      <a href="{{ url_for('auth.register') }}">Register</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-stack">
+      {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+
 </html>
