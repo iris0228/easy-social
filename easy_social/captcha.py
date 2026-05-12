@@ -14,7 +14,7 @@ def generate_captcha_text(length: int = 5) -> str:
 
 def build_captcha_image(text: str) -> bytes:
     buf = ImageCaptcha().generate(text)
-    return buf.read()
+    return buf.getvalue()
 
 
 def validate_captcha(stored: str, user_input: str) -> bool:

@@ -129,3 +129,19 @@ def test_register_captcha_refreshed_after_failure(client):
 
     with client.session_transaction() as sess:
         assert sess["captcha_text"] != first_captcha
+
+
+@pytest.mark.integration
+def test_captcha_image_endpoint_returns_png(client):
+    response = client.get("/auth/captcha.png")
+    assert response.status_code == 200
+    assert response.content_type == "image/png"
+    assert response.data[:4] == b"\x89PNG"
+
+
+@pytest.mark.integration
+def test_authenticated_user_redirected_from_register(client):
+    register(client, "alice")
+    response = client.get("/auth/register")
+    assert response.status_code == 302
+    assert "/auth/register" not in response.headers["Location"]

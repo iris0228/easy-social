@@ -120,12 +120,22 @@ def submit_form(browser, form):
     browser.execute_script("arguments[0].requestSubmit ? arguments[0].requestSubmit() : arguments[0].submit();", form)
 
 
+def get_captcha_text(browser) -> str:
+    """Fetch the current session's captcha text via the browser (shares session cookie)."""
+    return browser.execute_script(
+        "var xhr = new XMLHttpRequest();"
+        "xhr.open('GET', '/auth/captcha-hint', false);"
+        "xhr.send();"
+        "return JSON.parse(xhr.responseText).captcha_text;"
+    )
+
+
 def register_via_ui(browser, live_server: str, username: str):
     browser.get(f"{live_server}/auth/register")
     form = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "form.form-stack"))
     )
-    captcha_text = browser.find_element(By.CSS_SELECTOR, ".captcha-code").text
+    captcha_text = get_captcha_text(browser)
     set_field_value(browser, form.find_element(By.NAME, "username"), username)
     set_field_value(browser, form.find_element(By.NAME, "email"), f"{username}@example.com")
     set_field_value(browser, form.find_element(By.NAME, "password"), "password")
@@ -145,10 +155,12 @@ def test_register_wrong_captcha_shows_error(browser, live_server):
     form = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "form.form-stack"))
     )
+    correct = get_captcha_text(browser)
+    wrong = "AAAAA" if correct != "AAAAA" else "BBBBB"
     set_field_value(browser, form.find_element(By.NAME, "username"), "alice")
     set_field_value(browser, form.find_element(By.NAME, "email"), "alice@example.com")
     set_field_value(browser, form.find_element(By.NAME, "password"), "password")
-    set_field_value(browser, form.find_element(By.NAME, "captcha"), "WRONG")
+    set_field_value(browser, form.find_element(By.NAME, "captcha"), wrong)
     submit_form(browser, form)
     wait_for_text(browser, "Invalid CAPTCHA")
 
