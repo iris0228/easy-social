@@ -125,9 +125,11 @@ def register_via_ui(browser, live_server: str, username: str):
     form = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "form.form-stack"))
     )
+    captcha_text = browser.find_element(By.CSS_SELECTOR, ".captcha-code").text
     set_field_value(browser, form.find_element(By.NAME, "username"), username)
     set_field_value(browser, form.find_element(By.NAME, "email"), f"{username}@example.com")
     set_field_value(browser, form.find_element(By.NAME, "password"), "password")
+    set_field_value(browser, form.find_element(By.NAME, "captcha"), captcha_text)
     submit_form(browser, form)
     wait_for_feed(browser)
 
@@ -135,6 +137,20 @@ def register_via_ui(browser, live_server: str, username: str):
 def logout_via_ui(browser):
     submit_form(browser, browser.find_element(By.CSS_SELECTOR, "header form"))
     wait_for_login(browser)
+
+
+@pytest.mark.ui
+def test_register_wrong_captcha_shows_error(browser, live_server):
+    browser.get(f"{live_server}/auth/register")
+    form = WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "form.form-stack"))
+    )
+    set_field_value(browser, form.find_element(By.NAME, "username"), "alice")
+    set_field_value(browser, form.find_element(By.NAME, "email"), "alice@example.com")
+    set_field_value(browser, form.find_element(By.NAME, "password"), "password")
+    set_field_value(browser, form.find_element(By.NAME, "captcha"), "WRONG")
+    submit_form(browser, form)
+    wait_for_text(browser, "Invalid CAPTCHA")
 
 
 @pytest.mark.parametrize(

@@ -22,6 +22,7 @@ def register():
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
+        error = None
         if not validate_captcha(captcha_input, session.get("captcha_text")):
             flash("Invalid CAPTCHA. Please try again.", "error")
             session["captcha_text"] = generate_captcha_text()

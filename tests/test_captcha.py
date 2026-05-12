@@ -4,7 +4,7 @@ import string
 
 import pytest
 
-pytestmark = pytest.mark.unit
+from conftest import register
 
 
 def test_generate_captcha_text_default_length():
@@ -57,3 +57,75 @@ def test_validate_captcha_empty_input():
 def test_validate_captcha_empty_stored():
     from easy_social.captcha import validate_captcha
     assert validate_captcha("", "ABCDE") is False
+
+
+# ---------------------------------------------------------------------------
+# Integration tests
+# ---------------------------------------------------------------------------
+
+@pytest.mark.integration
+def test_register_page_sets_captcha_in_session(client):
+    client.get("/auth/register")
+    with client.session_transaction() as sess:
+        assert "captcha_text" in sess
+        assert len(sess["captcha_text"]) == 5
+
+
+@pytest.mark.integration
+def test_register_wrong_captcha_shows_error(client):
+    client.get("/auth/register")
+    response = client.post(
+        "/auth/register",
+        data={
+            "username": "alice",
+            "email": "alice@example.com",
+            "password": "password",
+            "captcha": "WRONG",
+        },
+        follow_redirects=True,
+    )
+    assert b"Invalid CAPTCHA" in response.data
+
+
+@pytest.mark.integration
+def test_register_correct_captcha_succeeds(client):
+    response = register(client, "alice")
+    assert response.status_code == 200
+    assert b"Feed" in response.data
+
+
+@pytest.mark.integration
+def test_register_empty_captcha_fails(client):
+    client.get("/auth/register")
+    response = client.post(
+        "/auth/register",
+        data={
+            "username": "alice",
+            "email": "alice@example.com",
+            "password": "password",
+            "captcha": "",
+        },
+        follow_redirects=True,
+    )
+    assert b"Invalid CAPTCHA" in response.data
+
+
+@pytest.mark.integration
+def test_register_captcha_refreshed_after_failure(client):
+    client.get("/auth/register")
+    with client.session_transaction() as sess:
+        first_captcha = sess["captcha_text"]
+
+    client.post(
+        "/auth/register",
+        data={
+            "username": "alice",
+            "email": "alice@example.com",
+            "password": "password",
+            "captcha": "WRONG",
+        },
+        follow_redirects=True,
+    )
+
+    with client.session_transaction() as sess:
+        assert sess["captcha_text"] != first_captcha
