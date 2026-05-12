@@ -15,7 +15,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("social.feed"))
 
-    if "captcha_text" not in session:
+    if request.method == "GET":
         session["captcha_text"] = generate_captcha_text()
 
     if request.method == "POST":
