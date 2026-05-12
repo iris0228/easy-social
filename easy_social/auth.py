@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
+from .captcha import generate_captcha_text, build_captcha_image, validate_captcha
 from .extensions import db
 from .models import User
 
@@ -14,14 +15,20 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("social.feed"))
 
+    if "captcha_text" not in session:
+        session["captcha_text"] = generate_captcha_text()
+
     if request.method == "POST":
+        captcha_input = request.form.get("captcha", "")
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
         error = None
-        if not username or not email or not password:
-            error = "Username, email, and password are required."
+        if not validate_captcha(session.get("captcha_text", ""), captcha_input):
+            flash("Invalid CAPTCHA. Please try again.", "error")
+            session["captcha_text"] = generate_captcha_text()
+            return render_template("auth/register.html")
         elif len(username) > 40:
             error = "Username must be 40 characters or fewer."
         elif User.query.filter_by(username=username).first():
@@ -40,6 +47,24 @@ def register():
             return redirect(url_for("social.feed"))
 
     return render_template("auth/register.html")
+
+
+@bp.get("/captcha.png")
+def captcha_image():
+    from flask import Response, current_app
+    if "captcha_text" not in session:
+        session["captcha_text"] = generate_captcha_text()
+    image_bytes = build_captcha_image(session["captcha_text"])
+    return Response(image_bytes, mimetype="image/png")
+
+
+@bp.get("/captcha-hint")
+def captcha_hint():
+    """Test-only endpoint: returns the current session captcha text as JSON."""
+    from flask import current_app, jsonify, abort
+    if not current_app.config.get("TESTING"):
+        abort(404)
+    return jsonify({"captcha_text": session.get("captcha_text", "")})
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -69,4 +94,3 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("auth.login"))
-
