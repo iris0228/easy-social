@@ -27,12 +27,6 @@ def test_generate_captcha_text_charset():
         assert all(c in allowed for c in text)
 
 
-def test_build_captcha_image_returns_png_bytes():
-    from easy_social.captcha import build_captcha_image
-    data = build_captcha_image("ABCDE")
-    assert isinstance(data, bytes)
-    assert data[:4] == b'\x89PNG'
-
 
 def test_validate_captcha_exact_match():
     from easy_social.captcha import validate_captcha

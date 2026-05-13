@@ -3,7 +3,7 @@ from __future__ import annotations
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
-from .captcha import generate_captcha_text, build_captcha_image, validate_captcha
+from .captcha import generate_captcha_text, validate_captcha
 from .extensions import db
 from .models import User
 
@@ -15,7 +15,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("social.feed"))
 
-    if "captcha_text" not in session:
+    if request.method == "GET":
         session["captcha_text"] = generate_captcha_text()
 
     if request.method == "POST":
@@ -25,7 +25,7 @@ def register():
         password = request.form.get("password", "")
 
         error = None
-        if not validate_captcha(session.get("captcha_text", ""), captcha_input):
+        if not validate_captcha(captcha_input, session.get("captcha_text", "")):
             flash("Invalid CAPTCHA. Please try again.", "error")
             session["captcha_text"] = generate_captcha_text()
             return render_template("auth/register.html")
@@ -51,10 +51,12 @@ def register():
 
 @bp.get("/captcha.png")
 def captcha_image():
-    from flask import Response, current_app
+    import io
+    from flask import Response
+    from captcha.image import ImageCaptcha
     if "captcha_text" not in session:
         session["captcha_text"] = generate_captcha_text()
-    image_bytes = build_captcha_image(session["captcha_text"])
+    image_bytes = ImageCaptcha().generate(session["captcha_text"]).getvalue()
     return Response(image_bytes, mimetype="image/png")
 
 
