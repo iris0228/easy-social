@@ -21,7 +21,7 @@
     <label>
       CAPTCHA
       <div class="captcha-box">
-        <img src="{{ url_for('auth.captcha_image') }}" alt="CAPTCHA" id="captcha-img">
+        <span class="captcha-code">{{ captcha_text }}</span>
       </div>
       <span class="captcha-hint">Please enter the code shown above.</span>
       <input name="captcha" type="text" placeholder="Enter the CAPTCHA code" autocomplete="off" required>

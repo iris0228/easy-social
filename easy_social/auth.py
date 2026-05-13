@@ -28,7 +28,7 @@ def register():
         if not validate_captcha(captcha_input, session.get("captcha_text", "")):
             flash("Invalid CAPTCHA. Please try again.", "error")
             session["captcha_text"] = generate_captcha_text()
-            return render_template("auth/register.html")
+            return render_template("auth/register.html", captcha_text=session.get("captcha_text", ""))
         elif len(username) > 40:
             error = "Username must be 40 characters or fewer."
         elif User.query.filter_by(username=username).first():
@@ -46,7 +46,7 @@ def register():
             login_user(user)
             return redirect(url_for("social.feed"))
 
-    return render_template("auth/register.html")
+    return render_template("auth/register.html", captcha_text=session.get("captcha_text", ""))
 
 
 @bp.get("/captcha.png")
