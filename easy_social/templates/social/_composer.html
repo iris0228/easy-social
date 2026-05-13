@@ -1,5 +1,14 @@
-<form method="post" action="{{ url_for('social.create_post') }}" enctype="multipart/form-data" class="composer">
-  <textarea name="body" rows="4" maxlength="2000" placeholder="What is happening?"></textarea>
+<form method="post" action="{{ url_for('social.create_post') }}" enctype="multipart/form-data" class="composer" id="composer-form">
+  <input type="hidden" name="is_poll" id="composer-is-poll" disabled>
+  <textarea name="body" rows="4" maxlength="2000" id="composer-body" placeholder="What is happening?"></textarea>
+
+  <div id="poll-options" hidden>
+    <input type="text" name="poll_option_1" maxlength="200" placeholder="Option 1 (required)">
+    <input type="text" name="poll_option_2" maxlength="200" placeholder="Option 2 (required)">
+    <input type="text" name="poll_option_3" maxlength="200" placeholder="Option 3 (optional)">
+    <input type="text" name="poll_option_4" maxlength="200" placeholder="Option 4 (optional)">
+  </div>
+
   <div class="composer-preview" data-media-preview hidden>
     <div class="composer-preview-frame" data-media-preview-frame></div>
     <div class="composer-preview-meta">
@@ -8,10 +17,29 @@
     </div>
   </div>
   <div class="composer-actions">
-    <label class="file-picker">
+    <label class="file-picker" id="composer-media-label">
       <span>Attach image/video</span>
       <input type="file" name="media" accept="image/*,video/*" data-media-input>
     </label>
+    <button type="button" class="link-button" id="composer-poll-toggle">Poll</button>
     <button type="submit">Post</button>
   </div>
 </form>
+<script>
+  (function () {
+    const toggle = document.getElementById('composer-poll-toggle');
+    const pollOptions = document.getElementById('poll-options');
+    const isPollInput = document.getElementById('composer-is-poll');
+    const mediaLabel = document.getElementById('composer-media-label');
+    const body = document.getElementById('composer-body');
+
+    toggle.addEventListener('click', function () {
+      const active = !pollOptions.hidden;
+      pollOptions.hidden = active;
+      isPollInput.disabled = active;
+      mediaLabel.hidden = !active;
+      toggle.textContent = active ? 'Poll' : 'Cancel Poll';
+      body.placeholder = active ? 'What is happening?' : 'Ask a question…';
+    });
+  })();
+</script>
